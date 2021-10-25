@@ -1,0 +1,29 @@
+name: Build Wheels
+
+on:
+  pull_request:
+    branches-ignore:
+      - "build"
+
+jobs:
+  build_wheels:
+    name: Build wheels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build wheels
+        run: DEBUG=1 ./build.sh
+
+      - name: Git add
+        run: git add -f ./wheels/*.whl
+
+      - name: Create pull request with built artifacts
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: ":package: [:robot:] New wheels"
+          branch: "build"
+          base: "main"
