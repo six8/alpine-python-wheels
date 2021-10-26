@@ -2,3 +2,4 @@ wheels
 wheels/build
 .idea
 .pip_cache
+pypi
