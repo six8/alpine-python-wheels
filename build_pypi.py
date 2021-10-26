@@ -26,7 +26,7 @@ def main():
 
     settings = Settings(
         output_dir=str(output_dir),
-        packages_url="/",
+        packages_url="../../../",
         title=None,
         logo=None,
         logo_width=None,
