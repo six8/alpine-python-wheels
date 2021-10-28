@@ -1,8 +1,15 @@
 import os
 from hashlib import sha256
 from pathlib import Path
-
+import requests
 from dumb_pypi.main import Settings, build_repo, Package
+
+
+class ExactUrlPackage(Package):
+    _url: str
+
+    def url(self, base_url: str, *, include_hash: bool = True) -> str:
+        return self._url
 
 
 def sha256sum(file: Path):
@@ -23,6 +30,18 @@ def main():
     for file in wheels_dir.glob("*.whl"):
         package = Package.create(filename=file.name, hash=f"sha256={sha256sum(file)}")
         packages.setdefault(package.name, set()).add(package)
+
+        # Include packages that pypi hosts. The files will be served from pypi
+        # and are indexed here so poetry can find them.
+        response = requests.get(
+            f"https://pypi.org/pypi/{package.name}/{package.version}/json"
+        ).json()
+        for url in response["urls"]:
+            package = ExactUrlPackage.create(
+                filename=url["filename"], hash=f"sha256={url['digests']['sha256']}"
+            )
+            package._url = url["url"]
+            packages[package.name].add(package)
 
     settings = Settings(
         output_dir=str(output_dir),
