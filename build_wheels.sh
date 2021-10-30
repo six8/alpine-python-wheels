@@ -9,7 +9,8 @@ WHEELS_DIR="$PWD/wheels"
 function repair_wheel {
   local wheel="$1"
   if ! auditwheel show "$wheel"; then
-    echo "Skipping non-platform wheel $wheel"
+    # Pure python wheel, just copy it
+    cp "$wheel" "$WHEELS_DIR"
   else
     auditwheel repair "$wheel" -w "$WHEELS_DIR"
   fi
@@ -31,7 +32,7 @@ done
 for whl in "$WHEELS_DIR"/build/*.whl; do
   if [ -f "${WHEELS_DIR}/$(basename "$whl")" ]; then
     # This looks to already be repaired, skip to avoid re-repair errors
-    echo "Skip already repaired wheel $whl"
+    echo "Skip existing wheel $whl"
     continue
   fi
   repair_wheel "$whl"
