@@ -5,6 +5,7 @@ set -Eeuo pipefail
 [ -n "${DEBUG:-}" ] && set -x
 
 WHEELS_DIR="$PWD/wheels"
+PIP="/opt/python/cp37-cp37m/bin/pip"
 
 function repair_wheel {
   local wheel="$1"
@@ -18,15 +19,23 @@ function repair_wheel {
 
 rm -f "$WHEELS_DIR"/build/*.whl
 
-for py_bin in /opt/python/cp37-cp37m/bin; do
-  "${py_bin}/pip" wheel \
-    --cache-dir "$PWD/.pip_cache" \
-    --wheel-dir "$WHEELS_DIR/build" \
-    -r "$PWD/requirements.txt" \
-    --find-links "file://$WHEELS_DIR" \
-    --find-links "file://$WHEELS_DIR/build" \
-    --no-deps
-done
+"$PIP" wheel \
+  --cache-dir "$PWD/.pip_cache" \
+  --wheel-dir "$WHEELS_DIR/build" \
+  -r "$PWD/requirements.txt" \
+  --find-links "file://$WHEELS_DIR" \
+  --find-links "file://$WHEELS_DIR/build" \
+  --find-links "file://$WHEELS_DIR/sources" \
+  --no-deps
+
+# For git requirements, also download the source
+grep "@" "$PWD/requirements.txt" | "$PIP" download \
+  --cache-dir "$PWD/.pip_cache" \
+  --exists-action i \
+  --find-links "file://$WHEELS_DIR/sources" \
+  -r /dev/stdin \
+  -d "$WHEELS_DIR/sources" \
+  --no-deps
 
 # Bundle external shared libraries into the wheels
 for whl in "$WHEELS_DIR"/build/*.whl; do

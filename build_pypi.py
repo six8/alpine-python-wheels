@@ -31,24 +31,33 @@ def main():
     for file in wheels_dir.glob("*.whl"):
         package = Package.create(filename=file.name, hash=f"sha256={sha256sum(file)}")
         packages.setdefault(package.name, set()).add(package)
+        source_file = wheels_dir / "sources" / f"{package.name}-{package.version}.zip"
 
-        # Include packages that pypi hosts. The files will be served from pypi
-        # and are indexed here so poetry can find them.
-        response = requests.get(
-            f"https://pypi.org/pypi/{package.name}/{package.version}/json"
-        ).json()
-        for url in response["urls"]:
-            if url["filename"] == file.name:
-                # Prefer this repository's file instead of pypi
-                continue
-
-            package = ExactUrlPackage.create(
-                filename=url["filename"],
-                hash=f"sha256={url['digests']['sha256']}",
-                requires_python=url["requires_python"],
+        if source_file.exists():
+            # This is a custom built package. Include the source, but
+            # do not include pypi packages
+            package = Package.create(
+                filename=source_file.name, hash=f"sha256={sha256sum(source_file)}"
             )
-            package._url = url["url"]
             packages[package.name].add(package)
+        else:
+            # Include packages that pypi hosts. The files will be served from pypi
+            # and are indexed here so poetry can find them.
+            response = requests.get(
+                f"https://pypi.org/pypi/{package.name}/{package.version}/json"
+            ).json()
+            for url in response["urls"]:
+                if url["filename"] == file.name:
+                    # Prefer this repository's file instead of pypi
+                    continue
+
+                package = ExactUrlPackage.create(
+                    filename=url["filename"],
+                    hash=f"sha256={url['digests']['sha256']}",
+                    requires_python=url["requires_python"],
+                )
+                package._url = url["url"]
+                packages[package.name].add(package)
 
     settings = Settings(
         output_dir=str(output_dir),

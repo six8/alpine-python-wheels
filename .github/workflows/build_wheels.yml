@@ -19,7 +19,9 @@ jobs:
         run: DEBUG=1 ./build.sh
 
       - name: Git add
-        run: git add -f ./wheels/*.whl
+        run: |
+          git add -f ./wheels/*.whl
+          git add -f ./wheels/sources/*.zip
 
       - name: Create pull request with built artifacts
         uses: peter-evans/create-pull-request@v3
