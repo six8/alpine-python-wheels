@@ -9,7 +9,8 @@ class ExactUrlPackage(Package):
     _url: str
 
     def url(self, base_url: str, *, include_hash: bool = True) -> str:
-        return self._url
+        hash_part = f"#{self.hash}" if self.hash and include_hash else ""
+        return f"{self._url}{hash_part}"
 
 
 def sha256sum(file: Path):
@@ -38,7 +39,9 @@ def main():
         ).json()
         for url in response["urls"]:
             package = ExactUrlPackage.create(
-                filename=url["filename"], hash=f"sha256={url['digests']['sha256']}"
+                filename=url["filename"],
+                hash=f"sha256={url['digests']['sha256']}",
+                requires_python=url["requires_python"],
             )
             package._url = url["url"]
             packages[package.name].add(package)
