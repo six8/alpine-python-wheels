@@ -26,6 +26,7 @@ def sha256sum(file: Path):
 def main():
     wheels_dir = Path(os.getcwd()) / "wheels"
     output_dir = wheels_dir / "pypi"
+    packages_base_url = "../../../"
 
     packages = {}
     for file in wheels_dir.glob("*.whl"):
@@ -36,9 +37,10 @@ def main():
         if source_file.exists():
             # This is a custom built package. Include the source, but
             # do not include pypi packages
-            package = Package.create(
+            package = ExactUrlPackage.create(
                 filename=source_file.name, hash=f"sha256={sha256sum(source_file)}"
             )
+            package._url = f"{packages_base_url.rstrip('/')}/sources/{package.filename}"
             packages[package.name].add(package)
         else:
             # Include packages that pypi hosts. The files will be served from pypi
@@ -61,7 +63,7 @@ def main():
 
     settings = Settings(
         output_dir=str(output_dir),
-        packages_url="../../../",
+        packages_url=packages_base_url,
         title=None,
         logo=None,
         logo_width=None,
