@@ -38,6 +38,10 @@ def main():
             f"https://pypi.org/pypi/{package.name}/{package.version}/json"
         ).json()
         for url in response["urls"]:
+            if url["filename"] == file.name:
+                # Prefer this repository's file instead of pypi
+                continue
+
             package = ExactUrlPackage.create(
                 filename=url["filename"],
                 hash=f"sha256={url['digests']['sha256']}",
