@@ -17,8 +17,8 @@ function repair_wheel {
 
 rm -f "$WHEELS_DIR"/build/*.whl
 
-for PYBIN in /opt/python/cp37-cp37m/bin; do
-  "${PYBIN}/pip" wheel \
+for py_bin in /opt/python/cp37-cp37m/bin; do
+  "${py_bin}/pip" wheel \
     --cache-dir "$PWD/.pip_cache" \
     --wheel-dir "$WHEELS_DIR/build" \
     -r "$PWD/requirements.txt" \
