@@ -14,10 +14,11 @@ docker_args=(
   -v "$DIR:$DIR"
   -w "$DIR"
   -u "$(id -u):$(id -g)"
+  -e "DEBUG=${DEBUG:-}"
 )
 
 if [ -t 0 ]; then
   docker_args+=(-it)
 fi
 
-docker run "${docker_args[@]}" "$IMAGE_NAME"
+docker run "${docker_args[@]}" "$IMAGE_NAME" "$@"
